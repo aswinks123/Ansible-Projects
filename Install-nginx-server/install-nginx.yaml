@@ -1,0 +1,31 @@
+---
+- name: Install Nginx on Web Servers
+  hosts: servers
+  become: yes  # This will give us root privileges to install packages
+  tasks:
+   #------------------------------------------------------------------------------------- # To install nginx  
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+      when: ansible_os_family == "Debian"
+ #------------------------------------------------------------------------------------- # To create a custom nginx home page    
+    - name: Create a basic index.html page
+      copy:
+        dest: /var/www/html/index.html
+        content: |
+          <html>
+            <head><title>Nginx deployed using Ansible</title></head>
+            <body>
+              <h1>Nginx Nginx deployed using Ansible</h1>
+              <p>This is a basic homepage served by Nginx.</p>
+            </body>
+          </html>
+      when: ansible_os_family == "Debian"
+ #------------------------------------------------------------------------------------- # To start the nginx service
+    - name: Start Nginx service
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+      when: ansible_os_family == "Debian"
