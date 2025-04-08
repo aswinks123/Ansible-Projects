@@ -1,3 +1,9 @@
+#=============================================================================
+#DEVELOPER: Aswin KS
+#DATE: 08-04-2025
+#ABOUT: Deploy an Nginx webserver, start the sevice and configure custom homepage
+#============================================================================
+
 ---
 - name: Install Nginx on Web Servers
   hosts: servers
