@@ -1,0 +1,93 @@
+#=============================================================================
+# DEVELOPER: Aswin KS
+# DATE: 09-04-2025
+# ABOUT: For hardening Ubuntu server configurations
+#=============================================================================
+
+#----------------------SSH hardening---------------------------------------
+
+- name: Ubuntu Server Hardening
+  hosts: servers
+  become: yes
+  tasks:
+
+  #Harden SSH Configurations
+    - name: Disable direct root login
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin no'
+        state: present
+        backup: yes
+
+    - name: Disable password authentication (if needed)
+      lineinfile: 
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+        state: present
+
+    - name: Restart SSH service
+      service:
+        name: ssh
+        state: restarted
+
+#----------------------Firewall Configuration---------------------------
+
+    - name: Install UFW if not already installed
+      apt:
+        name: ufw
+        state: present
+      when: ansible_facts['os_family'] == 'Debian'
+
+    - name: Reset UFW to remove all existing rules
+      ufw:
+        state: reset
+
+    - name: Set default UFW policies to deny all incoming and allow all outgoing
+      ufw:
+        direction: incoming
+        policy: deny
+
+    - name: Set default outgoing policy to allow
+      ufw:
+        direction: outgoing
+        policy: allow
+
+    - name: Allow port 22 (SSH) in UFW
+      ufw:
+        rule: allow
+        name: OpenSSH
+
+    - name: Allow port 80 (http) in UFW (if needed)
+      ufw:
+        rule: allow
+        port: '80'
+        proto: tcp
+
+    - name: Enable UFW firewall
+      ufw:
+        state: enabled
+
+#--------------------Password Policies---------------------------
+
+    - name: Set password minimum length to 10 characters
+      lineinfile:
+        path: /etc/login.defs
+        regexp: '^PASS_MIN_LEN'
+        line: 'PASS_MIN_LEN 12'
+        state: present
+
+    - name: Set password expiration to 90 days
+      lineinfile:
+        path: /etc/login.defs
+        regexp: '^PASS_MAX_DAYS'
+        line: 'PASS_MAX_DAYS 90'
+        state: present
+
+    - name: Set password warning period to 7 days
+      lineinfile:
+        path: /etc/login.defs
+        regexp: '^PASS_WARN_AGE'
+        line: 'PASS_WARN_AGE 5'
+        state: present
