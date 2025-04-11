@@ -1,0 +1,47 @@
+---
+- name: Configure SSL for Nginx web servers
+  hosts: servers
+  become: yes
+
+  vars:
+    ssl_cert_path: "/etc/nginx/ssl"
+    ssl_cert_file: "nginx_self_signed.crt"
+    ssl_key_file: "nginx_self_signed.key"
+  
+  tasks:
+    - name: Ensure SSL directory exists
+      ansible.builtin.file:
+        path: "{{ ssl_cert_path }}"
+        state: directory
+        mode: '0755'
+
+
+    - name: Generate the SSL certificate using OpenSSL
+      ansible.builtin.command: >      
+            openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 \
+            -keyout {{ ssl_cert_path }}/{{ ssl_key_file }} \
+            -out {{ ssl_cert_path }}/{{ ssl_cert_file }} \
+            -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
+      args:
+        creates: "{{ ssl_cert_path }}/{{ ssl_cert_file }}"
+
+    
+    - name: Configure Nginx to use SSL
+      ansible.builtin.template:
+        src: nginx_ssl_config.j2
+        dest:  "/etc/nginx/sites-available/default"
+      notify: Restart Nginx
+    
+
+    - name: Ensure Nginx is started
+      ansible.builtin.service:
+        name: nginx
+        state: started
+    
+
+  handlers:
+    - name: Restart Nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+
