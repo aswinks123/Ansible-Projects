@@ -1,0 +1,13 @@
+- name: Check for updates on Debian/Ubuntu
+  ansible.builtin.shell: apt list --upgradeable 2>/dev/null | grep -v "Listing..."
+  register: update_list
+  when: ansible_os_family == "Debian"
+
+- name: Set fact if updates are available
+  set_fact:
+    updates_available: "{{ update_list.stdout_lines }}"
+
+- name: Show available updates (if any)
+  debug:
+    var: updates_available
+  when: updates_available is defined

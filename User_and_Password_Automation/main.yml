@@ -1,0 +1,57 @@
+#=============================================================================
+#DEVELOPER: Aswin KS
+#DATE: 08-04-2025
+#ABOUT: Automate the creation of a user on all servers (Used for service account creation)
+#============================================================================
+
+---
+- name: User Management Playbook
+  hosts: servers
+  become: yes
+
+  vars_prompt:
+    - name: "username"
+      prompt: "Enter the username"
+      private: no
+    - name: "password"
+      prompt: "Enter the password"
+      private: yes
+    - name: "expiration_date"
+      prompt: "Enter the expiration date (YYYY-MM-DD)"
+      private: no
+    - name: "add_sudo"
+      prompt: "Do you want to give the user sudo access? (yes/no)"
+      private: no
+
+  tasks:
+    - name: Create the user
+      ansible.builtin.user:
+        name: "{{ username }}"
+        password: "{{ password | password_hash('sha512') }}"
+        state: present
+
+    - name: Add the user to sudo group if required
+      ansible.builtin.user:
+        name: "{{ username }}"
+        groups: sudo
+        append: yes
+      when: add_sudo == "yes"
+
+    - name: Convert expiration date to UNIX timestamp using Python
+      set_fact:
+        expiration_timestamp: "{{ lookup('pipe', 'date -d ' + expiration_date + ' +%s') }}"
+
+    - name: Set the password expiration date
+      ansible.builtin.user:
+        name: "{{ username }}"
+        expires: "{{ expiration_timestamp }}"
+      when: expiration_timestamp is defined
+
+    - name: Verify the user has been created
+      ansible.builtin.shell: "id {{ username }}"
+      register: user_check
+      ignore_errors: yes
+
+    - name: Show user creation status
+      debug:
+        msg: "{{ user_check.stdout }}"

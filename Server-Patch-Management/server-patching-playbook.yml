@@ -1,0 +1,9 @@
+# patch_playbook.yml
+- name: Linux Patching & Reboot Coordination
+  hosts: servers
+  serial: 1  # Enable rolling updates
+  become: yes
+
+  roles:
+    - checking_updates
+    - updating_system

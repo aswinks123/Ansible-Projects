@@ -1,0 +1,22 @@
+- name: Upgrade packages on Ubuntu
+  ansible.builtin.apt:
+    upgrade: dist
+    update_cache: yes
+
+- name: Check if reboot is required
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: reboot_required
+
+- name: Show if reboot is needed
+  ansible.builtin.debug:
+    msg: "Reboot is required"
+  when: reboot_required.stat.exists
+
+# Use this based on requirement
+
+# - name: Reboot the system if required
+#   ansible.builtin.reboot:
+#     msg: "System is rebooting after patching"
+#     pre_reboot_delay: 10
+#   when: reboot_required.stat.exists
