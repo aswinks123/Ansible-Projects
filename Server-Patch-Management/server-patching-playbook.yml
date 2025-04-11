@@ -1,4 +1,10 @@
-# patch_playbook.yml
+
+#=============================================================================
+#DEVELOPER: Aswin KS
+#DATE: 11-04-2025
+#ABOUT: Automate the patching of servers
+#============================================================================
+
 - name: Linux Patching & Reboot Coordination
   hosts: servers
   serial: 1  # Enable rolling updates
